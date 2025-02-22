@@ -1,4 +1,3 @@
-
 # Search String Parser
 
 This repository contains a small program designed to parse a search string into an Abstract Syntax Tree (AST) or, for example, transform it into SQL.
