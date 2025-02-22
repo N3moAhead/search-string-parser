@@ -75,12 +75,41 @@ export function parse(tokenList) {
   return parseExpression();
 }
 
-export function compile2DisplayString(ast) {
+export function transform2DisplayString(ast) {
   if (ast.type === "STATEMENT") {
     return `${ast.identifier}${ast.operator}${ast.value}`;
   }
   if (ast.type === "or" || ast.type === "and") {
-    return `(${compile2DisplayString(ast.left)} ${ast.type === "or" ? "||" : "&&"} ${compile2DisplayString(ast.right)})`;
+    return `(${transform2DisplayString(ast.left)} ${ast.type === "or" ? "||" : "&&"} ${transform2DisplayString(ast.right)})`;
+  }
+  throw new Error(`Unknown type ${ast.type}`);
+}
+
+export function transform2SqlString(ast) {
+  function transformSqlStatement(stmnt) {
+    switch (stmnt.operator) {
+      case "=":
+        return `${stmnt.identifier} = ${stmnt.value}`;
+      case "!=":
+        return `${stmnt.identifier} != ${stmnt.value}`;
+      case "~":
+        return `${stmnt.identifier} ~* ${stmnt.value}`;
+      case "!~":
+        return `${stmnt.identifier} NOT ~* ${stmnt.value}`;
+      case ":":
+        return `${stmnt.identifier} LIKE '%${stmnt.value}%'`;
+      case "!:":
+        return `${stmnt.identifier} NOT LIKE '%${stmnt.value}%'`;
+      default:
+        throw new Error(`Unknown operator ${stmnt.operator}`);
+    }
+  }
+
+  if (ast.type === "STATEMENT") {
+    return transformSqlStatement(ast);
+  }
+  if (ast.type === "or" || ast.type === "and") {
+    return `(${transform2SqlString(ast.left)} ${ast.type === "or" ? "OR" : "AND"} ${transform2SqlString(ast.right)})`;
   }
   throw new Error(`Unknown type ${ast.type}`);
 }
