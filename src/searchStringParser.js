@@ -1,6 +1,13 @@
 export function tokenize(searchString) {
-  function isCombiner(segment) {
-    return segment === "or" || segment === "and";
+  const TOKENS = {
+    and: "AND",
+    or: "OR",
+    "(": "OPEN_PAREN",
+    ")": "CLOSE_PAREN",
+  };
+
+  function isParenthesis(segment) {
+    return segment === "(" || segment === ")";
   }
 
   function tokenizeStatementSegment(segment) {
@@ -10,15 +17,22 @@ export function tokenize(searchString) {
       const [match, identifier, operator, value] = result;
       return { type: "STATEMENT", identifier, operator, value };
     }
-    throw new Error(`Error while trying to parse segment ${segment}`);
+    throw new Error(`Error while trying to tokenize segment ${segment}`);
+  }
+
+  function splitStringSegments(searchString) {
+    // Looks a bit funky but it splits at whitespace and before and after parenthesis
+    return searchString
+      .split(/(\s+|(?=[()])|(?<=[()]))/g)
+      .filter((seg) => seg.trim().length > 0);
   }
 
   const tokens = [];
-  const segments = searchString.split(/\s+/);
+  const segments = splitStringSegments(searchString);
   segments.forEach((segment) => {
-    if (isCombiner(segment)) {
-      // TODO add cleanup error correction and stuff like that...
-      tokens.push({ type: segment });
+    if (TOKENS[segment]) {
+      // TODO add error correction and stuff like that...
+      tokens.push({ type: TOKENS[segment] });
     } else {
       tokens.push(tokenizeStatementSegment(segment));
     }
@@ -37,7 +51,7 @@ export function parse(tokenList) {
   function parseOr() {
     let left = parseAnd();
 
-    while (index < tokenList.length && tokenList[index].type === "or") {
+    while (index < tokenList.length && tokenList[index].type === "OR") {
       const combiner = tokenList[index].type;
       index++;
       const right = parseAnd();
@@ -54,7 +68,7 @@ export function parse(tokenList) {
   function parseAnd() {
     let left = parsePrimary();
 
-    while (index < tokenList.length && tokenList[index].type === "and") {
+    while (index < tokenList.length && tokenList[index].type === "AND") {
       const combiner = tokenList[index].type;
       index++;
       const right = parsePrimary();
@@ -69,7 +83,32 @@ export function parse(tokenList) {
   }
 
   function parsePrimary() {
-    return tokenList[index++];
+    if (index >= tokenList.length) {
+      throw new Error("Unexpected end of input");
+    }
+
+    const token = tokenList[index];
+
+    if (token.type === "OPEN_PAREN") {
+      index++; // Consume '('
+      const expression = parseExpression();
+
+      if (
+        index >= tokenList.length ||
+        tokenList[index].type !== "CLOSE_PAREN"
+      ) {
+        throw new Error("Expected closing parenthesis");
+      }
+      index++; // Consume ')'
+      return expression;
+    }
+
+    if (token.type === "STATEMENT") {
+      index++; // Consume statement
+      return token;
+    }
+
+    throw new Error(`Unexpected token: ${JSON.stringify(token)}`);
   }
 
   return parseExpression();
@@ -79,8 +118,8 @@ export function transform2DisplayString(ast) {
   if (ast.type === "STATEMENT") {
     return `${ast.identifier}${ast.operator}${ast.value}`;
   }
-  if (ast.type === "or" || ast.type === "and") {
-    return `(${transform2DisplayString(ast.left)} ${ast.type === "or" ? "||" : "&&"} ${transform2DisplayString(ast.right)})`;
+  if (ast.type === "OR" || ast.type === "AND") {
+    return `(${transform2DisplayString(ast.left)} ${ast.type === "OR" ? "||" : "&&"} ${transform2DisplayString(ast.right)})`;
   }
   throw new Error(`Unknown type ${ast.type}`);
 }
@@ -108,8 +147,8 @@ export function transform2SqlString(ast) {
   if (ast.type === "STATEMENT") {
     return transformSqlStatement(ast);
   }
-  if (ast.type === "or" || ast.type === "and") {
-    return `(${transform2SqlString(ast.left)} ${ast.type === "or" ? "OR" : "AND"} ${transform2SqlString(ast.right)})`;
+  if (ast.type === "OR" || ast.type === "AND") {
+    return `(${transform2SqlString(ast.left)} ${ast.type === "OR" ? "OR" : "AND"} ${transform2SqlString(ast.right)})`;
   }
   throw new Error(`Unknown type ${ast.type}`);
 }

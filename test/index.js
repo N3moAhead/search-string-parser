@@ -5,10 +5,10 @@ import {
   transform2SqlString,
 } from "../src/searchStringParser";
 
-const testSearchString =
-  "firstName:lachen and lastName=weinen or lastName=tanzen or age~21";
+const testSearchString = "(first:n3mo or first:john) and last:ahead";
 
 const tokenList = tokenize(testSearchString);
+console.log(tokenList);
 const ast = parse(tokenList);
 console.log("AST:\n", JSON.stringify(ast, null, 2));
 const displayString = transform2DisplayString(ast);
