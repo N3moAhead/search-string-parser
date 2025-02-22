@@ -6,10 +6,6 @@ export function tokenize(searchString) {
     ")": "CLOSE_PAREN",
   };
 
-  function isParenthesis(segment) {
-    return segment === "(" || segment === ")";
-  }
-
   function tokenizeStatementSegment(segment) {
     const regex = /(.*?)(!{0,1}[=~:])(.*)/;
     const result = segment.match(regex);
