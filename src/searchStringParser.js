@@ -1,4 +1,4 @@
-function tokenize(searchString) {
+export function tokenize(searchString) {
   function isCombiner(segment) {
     return segment === "or" || segment === "and";
   }
@@ -26,7 +26,7 @@ function tokenize(searchString) {
   return tokens;
 }
 
-function parse(tokenList) {
+export function parse(tokenList) {
   let index = 0;
 
   function parseExpression() {
@@ -75,7 +75,7 @@ function parse(tokenList) {
   return parseExpression();
 }
 
-function compile2DisplayString(ast) {
+export function compile2DisplayString(ast) {
   if (ast.type === "STATEMENT") {
     return `${ast.identifier}${ast.operator}${ast.value}`;
   }
@@ -84,13 +84,3 @@ function compile2DisplayString(ast) {
   }
   throw new Error(`Unknown type ${ast.type}`);
 }
-
-const testSearchString =
-  "firstName:lachen and lastName=weinen or lastName=tanzen or age~21";
-
-const tokenList = tokenize(testSearchString);
-const ast = parse(tokenList);
-console.log("AST:\n", JSON.stringify(ast, null, 2));
-const displayString = compile2DisplayString(ast);
-console.log("Original Input\n", testSearchString);
-console.log("Compiled Output\n", displayString);

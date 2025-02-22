@@ -1,5 +1,5 @@
 start:
-	bun run src/searchStringParser.js
+	bun run test/index.js
 
 dev:
-	bun run --watch src/searchStringParser.js
+	bun run --watch test/index.js
