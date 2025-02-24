@@ -9,7 +9,7 @@ The primary motivation behind this project is to provide users with a precise an
 To address this, I developed a simple parser that allows users to construct search queries in a concise and readable format, such as:
 
 ```
-firstName=Lukas or firstName=Brian and lastName=Mueller
+(firstName=Lukas or firstName=Brian) and lastName=Mueller
 ```
 
 ## Features
